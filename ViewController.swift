@@ -10,11 +10,14 @@ import AVFoundation
 
 class ViewController: UIViewController, AVAudioPlayerDelegate {
 
+    //Interface elements
     @IBOutlet weak var btnBackward: UIButton!
     @IBOutlet weak var btnPlay: UIButton!
     @IBOutlet weak var btnPause: UIButton!
     @IBOutlet weak var btnForward: UIButton!
+    @IBOutlet weak var timeSlider: UISlider!
     
+    //Song elements
     @IBOutlet weak var songTitleLabel: UILabel!
     @IBOutlet weak var songImageView: UIImageView!
     
@@ -30,6 +33,9 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
     //Initialising my object of AVAudioPlayer
     var player: AVAudioPlayer!
     
+    //Timer control
+    var timer: Timer?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -40,50 +46,53 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
         //First song
         updateSong()
         
-        for song in songsArray {
-            print(song.name)
-            print(song.author)
-        }
+        //for song in songsArray {
+            //print(song.name)
+            //print(song.author)
+        //}
         
  
     }
-    
+    //Create the player for each song
     func initPlayer(soundName: String) {
-        //Song file testing
+        //Guard let to avoid risks (such as nil value exceptions)
         guard let url = Bundle.main.url(forResource: "\(soundName)", withExtension: "mp3") else {
             print("Sound file not found")
             return
         }
+        //Create it based on the url
         player = try? AVAudioPlayer(contentsOf: url)
-            
-        if player != nil {
+        
+        if player != nil { //If it's not null
 
-                player.delegate = self
-                
-                print(player.duration)
-                print(player.format)
-                print(player.volume)
+            player.delegate = self
+            //Song info
+            print(player.duration)
+            print(player.format)
+            print(player.volume)
             
         } else {
-                print("Player is null")
+            print("Player is null")
         }
     }
     
+    //When press backward, change to the previous song
     @IBAction func Backward(_ sender: UIButton) {
-        //When press backward, change to the previous song
-        print("Canción anterior")
         if currentSong == 0 {
             currentSong = songsArray.count - 1
         } else {
             currentSong -= 1
         }
         updateSong()
+        reset()
     }
     
+    //Button Action to play the song
     @IBAction func Play(_ sender: UIButton) {
         playAudio()
     }
     
+    //button Action to pause the song
     @IBAction func Pause(_ sender: UIButton) {
         //When press pause button hidden it and display play button
         btnPlay.isHidden = false
@@ -91,47 +100,92 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
         if player != nil {
             player.stop()
             print(player.currentTime)
+            isPaused = true
         }
     }
-    
+    //Button Action when press forward, change to the next song
     @IBAction func Forward(_ sender: UIButton) {
-        //When press forward, change to the next song
-        print("Canción siguiente")
+        
         if currentSong == songsArray.count - 1 {
             currentSong = 0
         } else {
             currentSong += 1
         }
         updateSong()
+        reset()
     }
-
-    func playAudio(){
-        print("Canción: \(songsArray[currentSong].filename)")
-        //When press play button hidden it and display pause button
-        btnPlay.isHidden = true
-        btnPause.isHidden = false
-        initPlayer(soundName: "batman")
-        //initPlayer(soundName: songsArray[currentSong].filename)
-        if player != nil {
-            player.play()
-        } else {
-            print("No ha sido posible reproducir la canción")
+    
+    //Method to update the slider indicating the timeline of song
+    @IBAction func seekTime(_ sender: UISlider) {
+        //print(sender.value)
+        let timeInterval = TimeInterval(Float(sender.value) * Float(self.player.duration))
+        //print(timeInterval)
+        player.currentTime = timeInterval
+        if !isPaused {
+            player.play(atTime: timeInterval)
         }
     }
     
-    //Method to change the song and playing automatically
+    //Main method for playing each song
+    func playAudio(){
+        
+        //When press play button hidden it and display pause button
+        btnPlay.isHidden = true
+        btnPause.isHidden = false
+        
+        if !isPaused {
+            initPlayer(soundName: songsArray[currentSong].filename)
+            if player != nil {
+                print("Reproduciendo..")
+                player.play()
+                //Timer to control playback time and pause or move the timeline
+                timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(displayCurrentTime), userInfo: nil, repeats: true)
+            } else {
+                print("No ha sido posible reproducir la canción")
+            }
+        } else {
+            player.play()
+            isPaused = false
+        }
+    }
+    
+    @objc func displayCurrentTime(){
+        //print("Current time: \(player.currentTime)")
+        //print("Duration: \(player.duration)")
+        updateTime()
+    }
+    
+    //Method to reset values, change the song and playing automatically
     func updateSong(){
         songTitleLabel.text = songsArray[currentSong].name
         songImageView.image = UIImage(named: songsArray[currentSong].image)
-        playAudio()
     }
     
+    //Update slider timeline
+    func updateTime(){
+        timeSlider.value = Float(player.currentTime/player.duration)
+        print(timeSlider.value)
+    }
+    
+    //Reset values
+    func reset(){
+        isPaused = false
+        timer?.invalidate()
+        timer = nil
+        timeSlider.value = 0
+    }
+    
+    //Method to be executed when playback is finished
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        //Adjusted for variables and values
         btnPlay.isHidden = false
         btnPause.isHidden = true
-        print("Reproducción terminada")
         currentSong += 1
+        print("Reproducción terminada")
+        reset()
+        //Go to the next song and plays it
         updateSong()
+        playAudio()
     }
 }
 
