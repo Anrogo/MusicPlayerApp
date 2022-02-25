@@ -199,6 +199,7 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
         timer = nil
         isPaused = false
         currentTimeLabel.text = "00:00"
+        durationLabel.text = "00:00"
     }
     
     //Method to be executed when playback is finished
