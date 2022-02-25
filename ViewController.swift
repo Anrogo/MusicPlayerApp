@@ -101,6 +101,7 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
             player.stop()
             print(player.currentTime)
             isPaused = true
+            print("Pausado")
         }
     }
     //Button Action when press forward, change to the next song
@@ -139,9 +140,12 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
                 print("Reproduciendo..")
                 player.play()
                 //Timer to control playback time and pause or move the timeline
-                timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(displayCurrentTime), userInfo: nil, repeats: true)
+                timer = Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(displayCurrentTime), userInfo: nil, repeats: true)
             } else {
+                //When encounters an error will not allow playback
                 print("No ha sido posible reproducir la canción")
+                btnPlay.isHidden = false
+                btnPause.isHidden = true
             }
         } else {
             player.play()
@@ -164,15 +168,15 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
     //Update slider timeline
     func updateTime(){
         timeSlider.value = Float(player.currentTime/player.duration)
-        print(timeSlider.value)
+        //print(timeSlider.value)
     }
     
-    //Reset values
+    //Reset values of slider, timer and pause control
     func reset(){
-        isPaused = false
+        timeSlider.value = 0
         timer?.invalidate()
         timer = nil
-        timeSlider.value = 0
+        isPaused = false
     }
     
     //Method to be executed when playback is finished
