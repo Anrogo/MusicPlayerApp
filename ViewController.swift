@@ -2,7 +2,7 @@
 //  ViewController.swift
 //  MusicPlayer
 //
-//  Created by user190722 on 2/23/22.
+//  Created by Antonio Rodríguez González on 2/23/22.
 //
 
 import UIKit
@@ -18,9 +18,16 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
     @IBOutlet weak var songTitleLabel: UILabel!
     @IBOutlet weak var songImageView: UIImageView!
     
+    //Array with object of Song
+    let songsArray: [Song] = Song.songs()
+    
+    //Default song always
+    var currentSong = 0
+    
     //Boolean controling reproduction
     var isPaused: Bool = false
     
+    //Initialising my object of AVAudioPlayer
     var player: AVAudioPlayer!
     
     override func viewDidLoad() {
@@ -29,6 +36,14 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
         //Initial values for buttons
         btnPause.isHidden = true
         btnPlay.isHidden = false
+        
+        //First song
+        updateSong()
+        
+        for song in songsArray {
+            print(song.name)
+            print(song.author)
+        }
         
  
     }
@@ -51,27 +66,22 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
             
         } else {
                 print("Player is null")
-
         }
     }
     
     @IBAction func Backward(_ sender: UIButton) {
         //When press backward, change to the previous song
         print("Canción anterior")
+        if currentSong == 0 {
+            currentSong = songsArray.count - 1
+        } else {
+            currentSong -= 1
+        }
+        updateSong()
     }
     
     @IBAction func Play(_ sender: UIButton) {
-        //When press play button hidden it and display pause button
-        btnPlay.isHidden = true
-        btnPause.isHidden = false
-        //initPlayer(soundName: "Imagine_Dragons_Warriors_Worlds_2014")
-        initPlayer(soundName: "Imagine_Dragons_Warriors_Worlds_2014")
-        if player != nil {
-            player.play()
-        } else {
-            print("No ha sido posible reproducir la canción")
-        }
-        
+        playAudio()
     }
     
     @IBAction func Pause(_ sender: UIButton) {
@@ -87,12 +97,41 @@ class ViewController: UIViewController, AVAudioPlayerDelegate {
     @IBAction func Forward(_ sender: UIButton) {
         //When press forward, change to the next song
         print("Canción siguiente")
+        if currentSong == songsArray.count - 1 {
+            currentSong = 0
+        } else {
+            currentSong += 1
+        }
+        updateSong()
     }
 
+    func playAudio(){
+        print("Canción: \(songsArray[currentSong].filename)")
+        //When press play button hidden it and display pause button
+        btnPlay.isHidden = true
+        btnPause.isHidden = false
+        initPlayer(soundName: "batman")
+        //initPlayer(soundName: songsArray[currentSong].filename)
+        if player != nil {
+            player.play()
+        } else {
+            print("No ha sido posible reproducir la canción")
+        }
+    }
+    
+    //Method to change the song and playing automatically
+    func updateSong(){
+        songTitleLabel.text = songsArray[currentSong].name
+        songImageView.image = UIImage(named: songsArray[currentSong].image)
+        playAudio()
+    }
+    
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
         btnPlay.isHidden = false
         btnPause.isHidden = true
         print("Reproducción terminada")
+        currentSong += 1
+        updateSong()
     }
 }
 
